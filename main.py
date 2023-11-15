@@ -18,14 +18,6 @@ num_episodes = 500 # 总的游戏回合数
 actions = ['up', 'right', 'down', 'left']
 action_indices = {action: i for i, action in enumerate(actions)}
 
-# 初始化Q表
-Q = np.zeros((height, width, len(actions)))
-
-def choose_action(state, Q, epsilon):
-    if np.random.uniform(0, 1) < epsilon:
-        return np.random.choice(len(actions))  # 探索
-    else:
-        return np.argmax(Q[state])  # 利用
 
 def step(state, action):
     i, j = state
@@ -38,37 +30,50 @@ def step(state, action):
     elif action == 'left':
         return i, max(j - 1, 0)
 
-def update_Q(Q, state, action_index, reward, next_state, alpha, gamma):
-    best_next_action = np.argmax(Q[next_state])
-    Q[state][action_index] = (1 - alpha) * Q[state][action_index] + alpha * (reward + gamma * Q[next_state][best_next_action])
+def get_Q():
+    # 初始化Q表
+    Q = np.zeros((height, width, len(actions)))
 
-# 训练Q表
-for episode in range(num_episodes):
-    state = start_state
-    while state != goal_state:
-        action_index = choose_action(state, Q, epsilon)
-        next_state = step(state, actions[action_index])
-        reward = -1 if next_state not in cliff_states else -100
-        if next_state in cliff_states:
-            next_state = start_state  # 掉入断崖，重置到起始位置
-        update_Q(Q, state, action_index, reward, next_state, alpha, gamma)
-        state = next_state
-
-# 输出最佳策略
-policy = np.array([[' ' for _ in range(width)] for _ in range(height)])
-for i in range(height):
-    for j in range(width):
-        if (i, j) == start_state:
-            policy[i, j] = 'S'
-        elif (i, j) == goal_state:
-            policy[i, j] = 'G'
-        elif (i, j) in cliff_states:
-            policy[i, j] = 'C'
+    def choose_action(state, Q, epsilon):
+        if np.random.uniform(0, 1) < epsilon:
+            return np.random.choice(len(actions))  # 探索
         else:
-            best_action = actions[np.argmax(Q[i, j])]
-            policy[i, j] = best_action[0].upper()
+            return np.argmax(Q[state])  # 利用
 
-print("最佳策略:")
-print(policy)
+
+
+    def update_Q(Q, state, action_index, reward, next_state, alpha, gamma):
+        best_next_action = np.argmax(Q[next_state])
+        Q[state][action_index] = (1 - alpha) * Q[state][action_index] + alpha * (
+                    reward + gamma * Q[next_state][best_next_action])
+
+    # 训练Q表
+    for episode in range(num_episodes):
+        state = start_state
+        while state != goal_state:
+            action_index = choose_action(state, Q, epsilon)
+            next_state = step(state, actions[action_index])
+            reward = -1 if next_state not in cliff_states else -100
+            if next_state in cliff_states:
+                next_state = start_state  # 掉入断崖，重置到起始位置
+            update_Q(Q, state, action_index, reward, next_state, alpha, gamma)
+            state = next_state
+    # 输出最佳策略
+    policy = np.array([[' ' for _ in range(width)] for _ in range(height)])
+    for i in range(height):
+        for j in range(width):
+            if (i, j) == start_state:
+                policy[i, j] = 'S'
+            elif (i, j) == goal_state:
+                policy[i, j] = 'G'
+            elif (i, j) in cliff_states:
+                policy[i, j] = 'C'
+            else:
+                best_action = actions[np.argmax(Q[i, j])]
+                policy[i, j] = best_action[0].upper()
+
+    print("最佳策略:")
+    print(policy)
+    return Q
 
 

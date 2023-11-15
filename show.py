@@ -1,5 +1,8 @@
 import tkinter as tk
+import numpy as np
+from main import get_Q, step
 
+Q = get_Q()
 # GUI设置
 cell_size = 50
 agent_color = 'blue'
@@ -11,9 +14,21 @@ path_color = 'gray'
 root = tk.Tk()
 root.title("Cliff Walking")
 
+# 参数设置
+height = 4
+width = 12
+start_state = (height - 1, 0)
+goal_state = (height - 1, width - 1)
+cliff_states = [(height - 1, i) for i in range(1, width - 1)]
+# 行动空间
+actions = ['up', 'right', 'down', 'left']
+action_indices = {action: i for i, action in enumerate(actions)}
 # 创建画布
 canvas = tk.Canvas(root, width=width*cell_size, height=height*cell_size)
 canvas.pack()
+
+
+
 
 # 绘制网格和断崖
 for i in range(height):
